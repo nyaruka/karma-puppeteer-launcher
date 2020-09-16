@@ -302,7 +302,7 @@ var PuppeteerBrowser = function (baseBrowserDecorator, args) {
       }
     );
 
-    await page.goto(url, { waitUntil: "networkidle0" });
+    await page.goto(url, { waitUntil: "load" });
   };
 
   this.on("kill", async (done) => {
