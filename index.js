@@ -103,7 +103,7 @@ const getScrenshotPath = (paths) =>
 const getDiffScrenshotPath = (paths) =>
   path.resolve(...diffRootpaths.concat(paths));
 
-const compareScreenshots = async (paths, exluded) => {
+const compareScreenshots = async (paths, exluded, threshold) => {
   return new Promise(async (resolve, reject) => {
     doneReading = async () => {
       // Wait until both files are read.
@@ -121,7 +121,7 @@ const compareScreenshots = async (paths, exluded) => {
 
       // Do the visual diff.
       const diff = new PNG({ width: img1.width, height: img2.height });
-      const matchOptions = { threshold: 0.3 };
+      const matchOptions = { threshold: threshold || 0.3 };
       const numDiffPixels =
         exluded != null && exluded.length != 0
           ? dynamicpixelmatch(
@@ -271,28 +271,31 @@ var PuppeteerBrowser = function (baseBrowserDecorator, args) {
       });
     });
 
-    await page.exposeFunction("matchPageSnapshot", (paths, clip, exluded) => {
-      return new Promise(async (resolve, reject) => {
-        // await page.waitFor(300);
+    await page.exposeFunction(
+      "matchPageSnapshot",
+      (paths, clip, exluded, threshold) => {
+        return new Promise(async (resolve, reject) => {
+          // await page.waitFor(300);
 
-        var update = flags.indexOf("--snapshot-update") != -1;
-        if (update) {
-          await screenshotPage(paths, true, clip);
-          resolve(true);
-        } else {
-          const snapshotExists = await fileExists(
-            getGoldenScreenshotPath(paths)
-          );
-          if (!snapshotExists) {
+          var update = flags.indexOf("--snapshot-update") != -1;
+          if (update) {
             await screenshotPage(paths, true, clip);
             resolve(true);
           } else {
-            await screenshotPage(paths, false, clip);
-            resolve(await compareScreenshots(paths, exluded));
+            const snapshotExists = await fileExists(
+              getGoldenScreenshotPath(paths)
+            );
+            if (!snapshotExists) {
+              await screenshotPage(paths, true, clip);
+              resolve(true);
+            } else {
+              await screenshotPage(paths, false, clip);
+              resolve(await compareScreenshots(paths, exluded, threshold));
+            }
           }
-        }
-      });
-    });
+        });
+      }
+    );
     await page.exposeFunction(
       "matchElementSnapshot",
       (paths, selector, excluded) => {
