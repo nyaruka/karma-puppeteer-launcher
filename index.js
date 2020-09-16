@@ -206,6 +206,14 @@ var PuppeteerBrowser = function (baseBrowserDecorator, args) {
       );
     });
 
+    await page.exposeFunction("waitForNavigation", async (options) => {
+      await page.waitForNavigation(options);
+    });
+
+    await page.exposeFunction("waitForSelector", async (selector, options) => {
+      await page.waitForSelector(selector, options);
+    });
+
     await page.exposeFunction("puppeteerDone", async (code) => {
       await browser.close();
       process.exit(code);
@@ -302,12 +310,12 @@ var PuppeteerBrowser = function (baseBrowserDecorator, args) {
       }
     );
 
-    await page.goto(url, { waitUntil: "load" });
+    console.log("going", url);
+    await page.goto(url);
   };
 
   this.on("kill", async (done) => {
     if (browser != null) {
-      // console.log("Closing puppeteer browser.");
       await browser.close();
     }
     done();
