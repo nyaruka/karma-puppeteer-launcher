@@ -110,19 +110,18 @@ const compareScreenshots = async (paths, exluded) => {
       if (++filesRead < 2) return;
 
       // The files should be the same size.
-
       if (img1.width != img2.width) {
-        console.error("image widths are not the same");
+        // console.error("image widths are not the same");
         resolve(false);
       }
       if (img1.height != img2.height) {
-        console.error("image heights are not the same");
+        // console.error("image heights are not the same");
         resolve(false);
       }
 
       // Do the visual diff.
       const diff = new PNG({ width: img1.width, height: img2.height });
-      const matchOptions = { threshold: 0.3 };
+      const matchOptions = { threshold: 0.2 };
       const numDiffPixels =
         exluded != null && exluded.length != 0
           ? dynamicpixelmatch(
@@ -145,8 +144,7 @@ const compareScreenshots = async (paths, exluded) => {
 
       // The files should look the same.
       if (numDiffPixels != 0) {
-        console.error("number of different pixels are not 0");
-
+        // console.error("number of different pixels are not 0");
         await ensureExistsFromRoot(path.resolve(...diffRootpaths), paths);
         diff.pack().pipe(fs.createWriteStream(getDiffScrenshotPath(paths)));
 
@@ -266,8 +264,17 @@ var PuppeteerBrowser = function (baseBrowserDecorator, args) {
       await element.screenshot({ path: filename });
     };
 
+    await page.exposeFunction("waitFor", (millis) => {
+      return new Promise(async (resolve, reject) => {
+        await page.waitFor(millis);
+        resolve();
+      });
+    });
+
     await page.exposeFunction("matchPageSnapshot", (paths, clip, exluded) => {
       return new Promise(async (resolve, reject) => {
+        // await page.waitFor(300);
+
         var update = flags.indexOf("--snapshot-update") != -1;
         if (update) {
           await screenshotPage(paths, true, clip);
@@ -310,7 +317,6 @@ var PuppeteerBrowser = function (baseBrowserDecorator, args) {
       }
     );
 
-    console.log("going", url);
     await page.goto(url);
   };
 
