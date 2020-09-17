@@ -40,6 +40,8 @@ var ChromeBrowser = function (baseBrowserDecorator, args) {
       "--user-data-dir=" + userDataDir,
       "--no-default-browser-check",
       "--no-first-run",
+      "--disable-gpu",
+      "--font-render-hinting=none",
       "--disable-default-apps",
       "--disable-popup-blocking",
       "--disable-translate",
@@ -103,7 +105,7 @@ const getScrenshotPath = (paths) =>
 const getDiffScrenshotPath = (paths) =>
   path.resolve(...diffRootpaths.concat(paths));
 
-const compareScreenshots = async (paths, exluded, threshold) => {
+const compareScreenshots = async (paths, excluded, threshold) => {
   return new Promise(async (resolve, reject) => {
     doneReading = async () => {
       // Wait until both files are read.
@@ -123,7 +125,7 @@ const compareScreenshots = async (paths, exluded, threshold) => {
       const diff = new PNG({ width: img1.width, height: img2.height });
       const matchOptions = { threshold: threshold || 0.3 };
       const numDiffPixels =
-        exluded != null && exluded.length != 0
+        excluded != null && excluded.length != 0
           ? dynamicpixelmatch(
               img1.data,
               img2.data,
@@ -131,7 +133,7 @@ const compareScreenshots = async (paths, exluded, threshold) => {
               img1.width,
               img1.height,
               matchOptions,
-              exluded
+              excluded
             )
           : pixelmatch(
               img1.data,
@@ -166,7 +168,6 @@ const compareScreenshots = async (paths, exluded, threshold) => {
 };
 var PuppeteerBrowser = function (baseBrowserDecorator, args) {
   ChromeBrowser.apply(this, arguments);
-  // console.log(args);
 
   var flags = args.flags || [];
 
@@ -273,7 +274,7 @@ var PuppeteerBrowser = function (baseBrowserDecorator, args) {
 
     await page.exposeFunction(
       "matchPageSnapshot",
-      (paths, clip, exluded, threshold) => {
+      (paths, clip, excluded, threshold) => {
         return new Promise(async (resolve, reject) => {
           // await page.waitFor(300);
 
@@ -290,7 +291,7 @@ var PuppeteerBrowser = function (baseBrowserDecorator, args) {
               resolve(true);
             } else {
               await screenshotPage(paths, false, clip);
-              resolve(await compareScreenshots(paths, exluded, threshold));
+              resolve(await compareScreenshots(paths, excluded, threshold));
             }
           }
         });
