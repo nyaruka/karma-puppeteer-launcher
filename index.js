@@ -272,6 +272,20 @@ var PuppeteerBrowser = function (baseBrowserDecorator, args) {
       });
     });
 
+    await page.exposeFunction("hover", (selector) => {
+      return new Promise(async (resolve, reject) => {
+        await page.hover(selector);
+        resolve();
+      });
+    });
+
+    await page.exposeFunction("moveMouse", (x, y) => {
+      return new Promise(async (resolve, reject) => {
+        await page.mouse.move(x,y);
+        resolve();
+      });
+    });
+
     await page.exposeFunction(
       "matchPageSnapshot",
       (paths, clip, excluded, threshold) => {
