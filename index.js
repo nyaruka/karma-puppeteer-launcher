@@ -209,6 +209,33 @@ var PuppeteerBrowser = function (baseBrowserDecorator, args) {
       await page.waitForNavigation(options);
     });
 
+    await page.exposeFunction("waitForFunction", async (options) => {
+      await page.waitForFunction(options);
+    });
+
+    await page.exposeFunction("pressKey", async (key, times, options) => {
+      for (let i=0; i<times; i++) {
+        await page.keyboard.press(key, options);
+      }
+    });
+
+    await page.exposeFunction("typeInto", async (selector, text, replace=false) => {
+      const frame = await page.frames().find((f) => f.name() === "context");
+      const element = await frame.$(selector);
+      await element.click({clickCount: replace ? 3 : 1});
+      await page.keyboard.type(text);
+    });
+
+    await page.exposeFunction("type", async (text) => {
+      await page.keyboard.type(text);
+    });
+
+    await page.exposeFunction("click", async (selector) => {
+      const frame = await page.frames().find((f) => f.name() === "context");
+      const element = await frame.$(selector);
+      await element.click({});
+    });
+
     await page.exposeFunction("waitForSelector", async (selector, options) => {
       await page.waitForSelector(selector, options);
     });
@@ -221,6 +248,7 @@ var PuppeteerBrowser = function (baseBrowserDecorator, args) {
     await page.exposeFunction("setViewport", async (options) => {
       await page.setViewport(options);
     });
+    
     await page.exposeFunction("captureElement", async (name, selector) => {
       const filename = path.resolve(
         "./",
@@ -282,6 +310,13 @@ var PuppeteerBrowser = function (baseBrowserDecorator, args) {
     await page.exposeFunction("moveMouse", (x, y) => {
       return new Promise(async (resolve, reject) => {
         await page.mouse.move(x,y);
+        resolve();
+      });
+    });
+
+    await page.exposeFunction("addStyleTag", (content) => {
+      return new Promise(async (resolve, reject) => {
+        await page.addStyleTag({content});
         resolve();
       });
     });
